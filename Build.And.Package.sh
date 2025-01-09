@@ -84,7 +84,7 @@ log_info "Mapped CI_PIPELINE_IID: $CI_PIPELINE_IID"
 # Build and Package Function                                                                                           #
 # ==================================================================================================================== #
 
-Run() {
+RunContextBuilder() {
     log_info "=== Starting Build-and-Package ==="
 
     # Pre-build cleanup (optional, to remove dangling images)
@@ -135,4 +135,4 @@ Run() {
 # ==================================================================================================================== #
 
 # Now, execute the build with the mapped variables
-Run
+RunContextBuilder
