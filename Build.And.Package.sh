@@ -63,7 +63,7 @@ log_success() { log_message "$SUCCESS" "$1"; }
 log_unknown() { log_message "$UNKNOWN" "$1"; }
 
 # Draw separator line
-draw_line() { echo "------------------------------------------------------------"; }
+draw_line() { echo "===================================================================================================================="; }
 
 # ==================================================================================================================== #
 # Map GitHub CI/CD Variables to Local Variables                                                                        #
@@ -96,11 +96,11 @@ RunContextBuilder() {
     log_info "🚀🔨 \033[1mHold tight! Docker build initiated.......\033[0m 🔨🚀\n\n"
     if docker build --pull --no-cache -t "$CI_REGISTRY_IMAGE":"$CI_PIPELINE_IID" .; then
         log_info "\033[1m\033[0;34m CI Docker image built successfully \033[0m"
-        log_info "------------------------------------------------------------------------------"
+        log_info "===================================================================================================================="
         log_info "| Container Registry Image | $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID"
-        log_info "------------------------------------------------------------------------------"
+        log_info "===================================================================================================================="
         docker images | grep "$CI_REGISTRY_IMAGE" | grep "$CI_PIPELINE_IID"
-        log_info "------------------------------------------------------------------------------"
+        log_info "===================================================================================================================="
         log_success "[SUCCESS] 🚀 Hold on, moving on to the next step... ✨"
     else
         log_error "[ERROR] Docker image build failed. Please check the build logs for details and ensure that all necessary files and configurations are in place properly."
@@ -116,9 +116,9 @@ RunContextBuilder() {
         log_success "✅ [SUCCESS] Image $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID exists."
         docker save "$CI_REGISTRY_IMAGE":"$CI_PIPELINE_IID" > $ARTIFACTS_DIR_CR_IMAGE-"$CI_PIPELINE_IID".tar
         log_info "\033[1m\033[0;34m Container Artifact Capturing \033[0m"
-        log_info "------------------------------------------------------------------------------"
+        log_info "===================================================================================================================="
         log_info "| Status   | ✅"
-        log_info "------------------------------------------------------------------------------"
+        log_info "===================================================================================================================="
         log_success "[SUCCESS] 🚀 Hold on, moving on to the next step... ✨"
     else
         log_error "❌ [ERROR] Post Validation for $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID failed."
