@@ -95,36 +95,36 @@ log_info "Mapped IMAGE_TAR: $IMAGE_TAR"
 # ==================================================================================================================== #
 
 RunContextBuilder() {
-    log_table_header "🔄 Container-Image-Scan"
+    log_info "🔄 Container-Image-Scan"
 
     if [ ! -f "$IMAGE_TAR" ]; then
-        echo "❌ Tar file not found: $IMAGE_TAR"
+        log_error "❌ Tar file not found: $IMAGE_TAR"
         exit 1
     fi
 
-    echo "✅ Found tar file: $IMAGE_TAR"
+    log_success "✅ Found tar file: $IMAGE_TAR"
 
-    echo "🔄 Loading the Docker image from the tar file..."
+    log_info "🔄 Loading the Docker image from the tar file..."
     if docker load < "$IMAGE_TAR"; then
-        echo "✅ Successfully loaded Docker image from $IMAGE_TAR"
+        log_success "✅ Successfully loaded Docker image from $IMAGE_TAR"
     else
-        echo "❌ Failed to load Docker image"
+        log_error "❌ Failed to load Docker image"
         exit 1
     fi
 
     # Pull the Trivy scanner
     if docker pull aquasec/trivy:latest; then
-        echo "✅ Successfully pulled Trivy image"
+        log_success "✅ Successfully pulled Trivy image"
     else
-        echo "❌ Failed to pull Trivy image"
+        log_error "❌ Failed to pull Trivy image"
         exit 1
     fi
 
     # Check if the image exists locally
     if docker images | grep -q "$CI_REGISTRY_IMAGE"; then
-        echo "✅ Image $IMAGE_NAME is available locally."
+        log_success "✅ Image $IMAGE_NAME is available locally."
     else
-        echo "❌ Image $IMAGE_NAME not found locally. Exiting."
+        log_error "❌ Image $IMAGE_NAME not found locally. Exiting."
         exit 1
     fi
 
@@ -134,7 +134,7 @@ RunContextBuilder() {
     draw_line
 
     # Run the Trivy scan
-    echo "🔍 Starting Trivy scan for vulnerabilities..."
+    log_info "🔍 Starting Trivy scan for vulnerabilities..."
 
     docker run --rm \
         -v /var/run/docker.sock:/var/run/docker.sock \
@@ -150,7 +150,7 @@ RunContextBuilder() {
     # --ignorefile /project/.trivyignore \
 
     draw_line  # Draw a separator
-    echo "✅ Scan completed successfully"
+    log_success "✅ Scan completed successfully"
 }
 
 # ==================================================================================================================== #
