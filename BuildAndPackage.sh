@@ -70,7 +70,7 @@ draw_line() { log_info "========================================================
 # ==================================================================================================================== #
 
 # Map the Gitlab CI/CD variables to local variables for easier use in the build
-AUTOMATE_REGISTRY_IMAGE="${CI_REGISTRY_IMAGE}"
+AUTOMATE_REGISTRY_IMAGE="${CI_PROJECT_PATH}"
 AUTOMATE_GIT_VERSION="${GitVersion_FullSemVer}"
 
 # Convert repository name to lowercase for Docker compatibility
@@ -78,7 +78,7 @@ AUTOMATE_REGISTRY_IMAGE=$(echo "$AUTOMATE_REGISTRY_IMAGE" | tr '[:upper:]' '[:lo
 
 # Log the mapped variables (optional for debugging)
 log_info "Mapped AUTOMATE_REGISTRY_IMAGE: $AUTOMATE_REGISTRY_IMAGE"
-log_info "Mapped CI_PIPELINE_IID: $CI_PIPELINE_IID"
+log_info "Mapped AUTOMATE_GIT_VERSION: $AUTOMATE_GIT_VERSION"
 
 # ==================================================================================================================== #
 # Build and Package Function                                                                                           #
