@@ -66,18 +66,18 @@ log_unknown() { log_message "$UNKNOWN" "$1"; }
 draw_line() { log_info "===================================================================================================================="; }
 
 # ==================================================================================================================== #
-# Map GitHub CI/CD Variables to Local Variables                                                                        #
+# Map Gitlab CI/CD Variables to Local Variables                                                                        #
 # ==================================================================================================================== #
 
-# Map the GitHub CI/CD variables to local variables for easier use in the build
-CI_REGISTRY_IMAGE="${GITHUB_REPOSITORY}"
-CI_PIPELINE_IID="${GITHUB_RUN_NUMBER}"
+# Map the Gitlab CI/CD variables to local variables for easier use in the build
+AUTOMATE_REGISTRY_IMAGE="${CI_REGISTRY_IMAGE}"
+AUTOMATE_GIT_VERSION="${GitVersion_FullSemVer}"
 
 # Convert repository name to lowercase for Docker compatibility
-CI_REGISTRY_IMAGE=$(echo "$CI_REGISTRY_IMAGE" | tr '[:upper:]' '[:lower:]')
+AUTOMATE_REGISTRY_IMAGE=$(echo "$AUTOMATE_REGISTRY_IMAGE" | tr '[:upper:]' '[:lower:]')
 
 # Log the mapped variables (optional for debugging)
-log_info "Mapped CI_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE"
+log_info "Mapped AUTOMATE_REGISTRY_IMAGE: $AUTOMATE_REGISTRY_IMAGE"
 log_info "Mapped CI_PIPELINE_IID: $CI_PIPELINE_IID"
 
 # ==================================================================================================================== #
@@ -94,12 +94,12 @@ RunContextBuilder() {
 
     # Build Docker image
     log_info "🚀🔨 \033[1mHold tight! Docker build initiated.......\033[0m 🔨🚀\n\n"
-    if docker build --pull --no-cache -t "$CI_REGISTRY_IMAGE":"$CI_PIPELINE_IID" .; then
+    if docker build --pull --no-cache -t "$AUTOMATE_REGISTRY_IMAGE":"$AUTOMATE_GIT_VERSION" .; then
         log_info "\033[1m\033[0;34m CI Docker image built successfully \033[0m"
         log_info "===================================================================================================================="
-        log_info "| Container Registry Image | $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID"
+        log_info "| Container Registry Image | $AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION"
         log_info "===================================================================================================================="
-        docker images | grep "$CI_REGISTRY_IMAGE" | grep "$CI_PIPELINE_IID"
+        docker images | grep "$AUTOMATE_REGISTRY_IMAGE" | grep "$AUTOMATE_GIT_VERSION"
         log_info "===================================================================================================================="
         log_success "[SUCCESS] 🚀 Hold on, moving on to the next step... ✨"
     else
@@ -112,16 +112,16 @@ RunContextBuilder() {
     log_info "🔍 Post-build validation in progress..."
 
     # Validate if the image exists
-    if docker inspect "$CI_REGISTRY_IMAGE:$CI_PIPELINE_IID" > /dev/null 2>&1; then
-        log_success "✅ [SUCCESS] Image $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID exists."
-        docker save "$CI_REGISTRY_IMAGE":"$CI_PIPELINE_IID" > $ARTIFACTS_DIR_CR_IMAGE-"$CI_PIPELINE_IID".tar
+    if docker inspect "$AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION" > /dev/null 2>&1; then
+        log_success "✅ [SUCCESS] Image $AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION exists."
+        docker save "$AUTOMATE_REGISTRY_IMAGE":"$AUTOMATE_GIT_VERSION" > $ARTIFACTS_DIR_CR_IMAGE-"$AUTOMATE_GIT_VERSION".tar
         log_info "\033[1m\033[0;34m Container Artifact Capturing \033[0m"
         log_info "===================================================================================================================="
         log_info "| Status   | ✅"
         log_info "===================================================================================================================="
         log_success "[SUCCESS] 🚀 Hold on, moving on to the next step... ✨"
     else
-        log_error "❌ [ERROR] Post Validation for $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID failed."
+        log_error "❌ [ERROR] Post Validation for $AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION failed."
         exit 1
     fi
 
