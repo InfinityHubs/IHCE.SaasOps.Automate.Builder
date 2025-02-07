@@ -68,32 +68,26 @@ log_unknown() { log_message "$UNKNOWN" "$1"; }
 draw_line() { log_info "===================================================================================================================="; }
 
 # ==================================================================================================================== #
-# Map GitHub CI/CD Variables to Local Variables                                                                        #
+# Map Gitlab CI/CD Variables to Local Variables                                                                        #
 # ==================================================================================================================== #
 
-# Map the GitHub CI/CD variables to local variables for easier use in the build
-CI_REGISTRY_IMAGE="${GITHUB_REPOSITORY}"
-CI_PIPELINE_IID="${GITHUB_RUN_NUMBER}"
-
-# Convert repository name to lowercase for Docker compatibility
-CI_REGISTRY_IMAGE=$(echo "$CI_REGISTRY_IMAGE" | tr '[:upper:]' '[:lower:]')
+# Map the Gitlab CI/CD variables to local variables for easier use in the build
+readonly AUTOMATE_REGISTRY_IMAGE=$(echo "${CI_PROJECT_PATH}" | tr '[:upper:]' '[:lower:]')
+readonly AUTOMATE_GIT_VERSION=$(echo "${GitVersion_FullSemVer}" | tr '[:upper:]' '[:lower:]')
 
 # Define the image name (ensure this matches the loaded image)
-IMAGE_NAME="$CI_REGISTRY_IMAGE:$CI_PIPELINE_IID"
+readonly AUTOMATE_IMAGE_NAME="$AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION"
 
 # Load the Docker image from the tar file
-IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$CI_PIPELINE_IID.tar"
+readonly AUTOMATE_IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$AUTOMATE_GIT_VERSION.tar"
 
 # Convert Target Destinations repository name to lowercase for Docker compatibility
-TargetVersion="${GHP_TargetVersion}"
-TargetHub="docker.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]')"
+readonly AUTOMATE_TARGET_CR="${Sce_Automate_Docker_Hub}${AUTOMATE_REGISTRY_IMAGE}:${AUTOMATE_GIT_VERSION}"
 
 # Log the mapped variables (optional for debugging)
-log_info "Mapped CI_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE"
-log_info "Mapped CI_PIPELINE_IID: $CI_PIPELINE_IID"
-log_info "Mapped CI_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE"
-log_info "Mapped IMAGE_NAME: $IMAGE_NAME"
-log_info "Mapped IMAGE_TAR: $IMAGE_TAR"
+log_info "Automate.Git.Version -----> $AUTOMATE_GIT_VERSION"
+log_info "Automate.Git.Pipeline ----> $AUTOMATE_REGISTRY_IMAGE"
+log_info "Automate.Runner.Artifact -> $AUTOMATE_IMAGE_TAR"
 
 # ==================================================================================================================== #
 # Function to scan the Docker image for vulnerabilities                                                                #
@@ -104,29 +98,28 @@ RunContextBuilder() {
     # Push Docker image to the registry
     log_info "🔄 Pushing Docker image to the Docker Container Registry..."
 
-    if [ ! -f "$IMAGE_TAR" ]; then
-        log_error "❌ Tar file not found: $IMAGE_TAR"
+    if [ ! -f "$AUTOMATE_IMAGE_TAR" ]; then
+        log_error "❌ Tar file not found: $AUTOMATE_IMAGE_TAR"
         exit 1
     fi
 
-    log_success "✅ Found tar file: $IMAGE_TAR"
+    log_success "✅ Found tar file: $AUTOMATE_IMAGE_TAR"
 
     log_info "🔄 Loading the Docker image from the tar file..."
 
-    if docker load < "$IMAGE_TAR"; then
-        log_success "✅ Successfully loaded Docker image from $IMAGE_TAR"
+    if docker load < "$AUTOMATE_IMAGE_TAR"; then
+        log_success "✅ Successfully loaded Docker image from $AUTOMATE_IMAGE_TAR"
         log_info "Artifactory Images"
         docker images
         draw_line
-        docker tag "$CI_REGISTRY_IMAGE":"$CI_PIPELINE_IID" "$TargetHub":"$TargetVersion"
-        # echo "$CI_REGISTRY_PASSWORD" | docker login ghcr.io -u "$CI_REGISTRY_USER" --password-stdin
-        echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-        if docker --debug push "$TargetHub":"$TargetVersion"; then
+        docker tag "$AUTOMATE_REGISTRY_IMAGE":"$AUTOMATE_GIT_VERSION" "$AUTOMATE_TARGET_CR"
+        echo "$Sce_Automate_Docker_Hub_User_PAT" | docker login -u "$Sce_Automate_Docker_Hub_User" --password-stdin
+        if docker --debug push "$AUTOMATE_TARGET_CR"; then
             log_info "\033[1m\033[0;34mCI Publish Artifacts Log Summary \033[0m"
             log_info "------------------------------------------------------------------------------"
-            log_info "| SaasOps.Automate.Builder.Runner Artifact       | $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID"
-            log_info "| SaasOps.Automate.Builder.Target Artifact       | $TargetHub:$TargetVersion"
-            log_info "| SaasOps.Automate.Builder.Target Build Version  | $TargetVersion"
+            log_info "| SaasOps.Automate.Builder.Runner Artifact       | $AUTOMATE_REGISTRY_IMAGE"
+            log_info "| SaasOps.Automate.Builder.Target Artifact       | $AUTOMATE_TARGET_CR"
+            log_info "| SaasOps.Automate.Builder.Target Build Version  | $AUTOMATE_GIT_VERSION"
             log_info "------------------------------------------------------------------------------"
             log_success "✅ [SUCCESS] 🚀 Docker image pushed successfully....✨"
         else
