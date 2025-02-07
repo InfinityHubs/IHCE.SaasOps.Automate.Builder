@@ -65,7 +65,7 @@ draw_line() { log_info "========================================================
 
 # Map the Gitlab CI/CD variables to local variables for easier use in the build
 readonly AUTOMATE_REGISTRY_IMAGE=$(echo "${CI_PROJECT_PATH}" | tr '[:upper:]' '[:lower:]')
-readonly AUTOMATE_GIT_VERSION="${GitVersion_FullSemVer}"
+readonly AUTOMATE_GIT_VERSION=$(echo "${GitVersion_FullSemVer}" | tr '[:upper:]' '[:lower:]')
 
 # Log the mapped variables (optional for debugging)
 log_info "Automate.Git.Version ---> $AUTOMATE_GIT_VERSION"
