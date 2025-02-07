@@ -73,6 +73,7 @@ draw_line() { log_info "========================================================
 
 # Map the Gitlab CI/CD variables to local variables for easier use in the build
 readonly AUTOMATE_REGISTRY_IMAGE=$(echo "${CI_PROJECT_PATH}" | tr '[:upper:]' '[:lower:]')
+readonly AUTOMATE_REGISTRY_IMAGE2=$(echo "${CI_PROJECT_NAME}" | tr '[:upper:]' '[:lower:]')
 readonly AUTOMATE_GIT_VERSION=$(echo "${GitVersion_FullSemVer}" | tr '[:upper:]' '[:lower:]')
 
 # Define the image name (ensure this matches the loaded image)
@@ -82,7 +83,7 @@ readonly AUTOMATE_IMAGE_NAME="$AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION"
 readonly AUTOMATE_IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$AUTOMATE_GIT_VERSION.tar"
 
 # Convert Target Destinations repository name to lowercase for Docker compatibility
-readonly AUTOMATE_TARGET_CR="${Sce_Automate_Docker_Hub}${AUTOMATE_REGISTRY_IMAGE}:${AUTOMATE_GIT_VERSION}"
+readonly AUTOMATE_TARGET_CR="${Sce_Automate_Docker_Hub}${AUTOMATE_REGISTRY_IMAGE2}:${AUTOMATE_GIT_VERSION}"
 
 # Log the mapped variables (optional for debugging)
 log_info "Automate.Git.Version -----> $AUTOMATE_GIT_VERSION"
