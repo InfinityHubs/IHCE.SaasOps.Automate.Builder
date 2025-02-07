@@ -67,28 +67,23 @@ log_unknown() { log_message "$UNKNOWN" "$1"; }
 draw_line() { log_info "===================================================================================================================="; }
 
 # ==================================================================================================================== #
-# Map GitHub CI/CD Variables to Local Variables                                                                        #
+# Map Gitlab CI/CD Variables to Local Variables                                                                        #
 # ==================================================================================================================== #
 
-# Map the GitHub CI/CD variables to local variables for easier use in the build
-CI_REGISTRY_IMAGE="${GITHUB_REPOSITORY}"
-CI_PIPELINE_IID="${GITHUB_RUN_NUMBER}"
-
-# Convert repository name to lowercase for Docker compatibility
-CI_REGISTRY_IMAGE=$(echo "$CI_REGISTRY_IMAGE" | tr '[:upper:]' '[:lower:]')
+# Map the Gitlab CI/CD variables to local variables for easier use in the build
+readonly AUTOMATE_REGISTRY_IMAGE=$(echo "${CI_PROJECT_PATH}" | tr '[:upper:]' '[:lower:]')
+readonly AUTOMATE_GIT_VERSION="${GitVersion_FullSemVer}"
 
 # Define the image name (ensure this matches the loaded image)
-IMAGE_NAME="$CI_REGISTRY_IMAGE:$CI_PIPELINE_IID"
+readonly AUTOMATE_IMAGE_NAME="$AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION"
 
 # Load the Docker image from the tar file
-IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$CI_PIPELINE_IID.tar"
+readonly AUTOMATE_IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$AUTOMATE_GIT_VERSION.tar"
 
 # Log the mapped variables (optional for debugging)
-log_info "Mapped CI_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE"
-log_info "Mapped CI_PIPELINE_IID: $CI_PIPELINE_IID"
-log_info "Mapped CI_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE"
-log_info "Mapped IMAGE_NAME: $IMAGE_NAME"
-log_info "Mapped IMAGE_TAR: $IMAGE_TAR"
+log_info "Automate.Git.Version -----> $AUTOMATE_GIT_VERSION"
+log_info "Automate.Git.Pipeline ----> $AUTOMATE_REGISTRY_IMAGE"
+log_info "Automate.Runner.Artifact -> $AUTOMATE_IMAGE_TAR"
 
 # ==================================================================================================================== #
 # Function to scan the Docker image for vulnerabilities                                                                #
@@ -97,16 +92,16 @@ log_info "Mapped IMAGE_TAR: $IMAGE_TAR"
 RunContextBuilder() {
     log_info "🔄 Container-Image-Scan"
 
-    if [ ! -f "$IMAGE_TAR" ]; then
-        log_error "❌ Tar file not found: $IMAGE_TAR"
+    if [ ! -f "$AUTOMATE_IMAGE_TAR" ]; then
+        log_error "❌ Tar file not found: $AUTOMATE_IMAGE_TAR"
         exit 1
     fi
 
-    log_success "✅ Found tar file: $IMAGE_TAR"
+    log_success "✅ Found tar file: $AUTOMATE_IMAGE_TAR"
 
     log_info "🔄 Loading the Docker image from the tar file..."
-    if docker load < "$IMAGE_TAR"; then
-        log_success "✅ Successfully loaded Docker image from $IMAGE_TAR"
+    if docker load < "$AUTOMATE_IMAGE_TAR"; then
+        log_success "✅ Successfully loaded Docker image from $AUTOMATE_IMAGE_TAR"
     else
         log_error "❌ Failed to load Docker image"
         exit 1
@@ -121,10 +116,10 @@ RunContextBuilder() {
     fi
 
     # Check if the image exists locally
-    if docker images | grep -q "$CI_REGISTRY_IMAGE"; then
-        log_success "✅ Image $IMAGE_NAME is available locally."
+    if docker images | grep -q "$AUTOMATE_REGISTRY_IMAGE"; then
+        log_success "✅ Image $AUTOMATE_IMAGE_NAME is available locally."
     else
-        log_error "❌ Image $IMAGE_NAME not found locally. Exiting."
+        log_error "❌ Image $AUTOMATE_IMAGE_NAME not found locally. Exiting."
         exit 1
     fi
 
@@ -145,7 +140,7 @@ RunContextBuilder() {
         --scanners vuln,secret \
         --show-suppressed \
         --severity CRITICAL,HIGH,MEDIUM \
-        "$IMAGE_NAME"
+        "$AUTOMATE_IMAGE_NAME"
 
     # --ignorefile /project/.trivyignore \
 
