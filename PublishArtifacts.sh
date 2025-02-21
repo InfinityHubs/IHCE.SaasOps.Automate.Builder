@@ -83,13 +83,19 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Declare an associative array
-declare -A Roadmap_Raw_Json
+# ==================================================================================================================== #
+# Parse the JSON into separate variables using basic shell tools (no associative arrays)                              #
+# ==================================================================================================================== #
 
-# Convert JSON to key-value pairs and store in the associative array
-while IFS="=" read -r key value; do
-    Roadmap_Raw_Json[$key]="$value"
-done < <(echo "$Roadmap_Raw_Json" | jq -r 'to_entries | .[] | "\(.key)=\(.value // "")"')
+# Extract key-value pairs using jq, and store them into regular shell variables
+R_ID=$(echo "$Roadmap_Raw_Json" | jq -r '.id // ""')
+R_UNITY=$(echo "$Roadmap_Raw_Json" | jq -r '.unity // ""')
+R_OFFERING=$(echo "$Roadmap_Raw_Json" | jq -r '.offering // ""')
+R_PIPELINE=$(echo "$Roadmap_Raw_Json" | jq -r '.pipeline // ""')
+R_INDEX=$(echo "$Roadmap_Raw_Json" | jq -r '.index // ""')
+R_NAMESPACE=$(echo "$Roadmap_Raw_Json" | jq -r '.namespace // ""')
+R_ARTIFACT_ID=$(echo "$Roadmap_Raw_Json" | jq -r '.artifact_id // ""')
+R_TAG=$(echo "$Roadmap_Raw_Json" | jq -r '.tag // ""')
 
 # ==================================================================================================================== #
 # Map Gitlab CI/CD Variables to Local Variables                                                                        #
@@ -107,7 +113,7 @@ readonly AUTOMATE_IMAGE_NAME="$AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION"
 readonly AUTOMATE_IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$AUTOMATE_GIT_VERSION.tar"
 
 # Load the Docker image from the tar file
-readonly AUTOMATE_ARTIFACTORY_REPOSITORY="${ROADMAP_JSON[index]}-${ROADMAP_JSON[namespace]}-${ROADMAP_JSON[artifact_id]}"
+readonly AUTOMATE_ARTIFACTORY_REPOSITORY="${R_INDEX}-${R_NAMESPACE}-${R_ARTIFACT_ID}"
 
 # Convert Target Destinations repository name to lowercase for Docker compatibility
 readonly AUTOMATE_TARGET_CR="${Sce_Automate_Docker_Hub}${AUTOMATE_ARTIFACTORY_REPOSITORY}:${AUTOMATE_GIT_VERSION}"
