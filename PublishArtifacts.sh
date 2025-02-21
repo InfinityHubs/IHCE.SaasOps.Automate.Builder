@@ -152,8 +152,8 @@ RunContextBuilder() {
             log_info "\033[1m\033[0;34mCI Publish Artifacts Log Summary \033[0m"
             log_info "------------------------------------------------------------------------------"
             log_info "| SaasOps.Automate.Builder.Runner Artifact       | $AUTOMATE_REGISTRY_IMAGE"
-            log_info "| SaasOps.Automate.Builder.Target Artifact       | $AUTOMATE_TARGET_CR"
-            log_info "| SaasOps.Automate.Builder.Target Build Version  | $AUTOMATE_GIT_VERSION"
+            log_info "| SaasOps.Automate.Builder.Target Artifact       | $AUTOMATE_GIT_VERSION"
+            #log_info "| SaasOps.Automate.Builder.Target Build Version  | $AUTOMATE_GIT_VERSION"
             log_info "------------------------------------------------------------------------------"
             log_success "✅ [SUCCESS] 🚀 Docker image pushed successfully....✨"
         else
