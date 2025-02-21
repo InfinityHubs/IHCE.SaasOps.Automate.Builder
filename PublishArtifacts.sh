@@ -68,12 +68,36 @@ log_unknown() { log_message "$UNKNOWN" "$1"; }
 draw_line() { log_info "===================================================================================================================="; }
 
 # ==================================================================================================================== #
+# SCE.Automate.Pipelines                                                                                               #
+# ==================================================================================================================== #
+
+# Fetch the build script using curl
+Roadmap="${Sce_Automate_Source}/${Sce_Automate_Pipelines}/$(echo "${CI_PROJECT_NAME}" | tr '[:upper:]' '[:lower:]')/roadmap.json"
+
+# Fetch the JSON content and store it in a variable
+Roadmap_Raw_Json=$(curl -sSL "$Roadmap")
+
+# Check if the curl call failed
+if [ $? -ne 0 ]; then
+    echo "Failed to fetch the Sce_Automate_Pipelines artifactory hub details for ${CI_PROJECT_NAME} project."
+    exit 1
+fi
+
+# Declare an associative array
+declare -A Roadmap_Raw_Json
+
+# Convert JSON to key-value pairs and store in the associative array
+while IFS="=" read -r key value; do
+    Roadmap_Raw_Json[$key]="$value"
+done < <(echo "$Roadmap_Raw_Json" | jq -r 'to_entries | .[] | "\(.key)=\(.value // "")"')
+
+# ==================================================================================================================== #
 # Map Gitlab CI/CD Variables to Local Variables                                                                        #
 # ==================================================================================================================== #
 
 # Map the Gitlab CI/CD variables to local variables for easier use in the build
 readonly AUTOMATE_REGISTRY_IMAGE=$(echo "${CI_PROJECT_PATH}" | tr '[:upper:]' '[:lower:]')
-readonly AUTOMATE_REGISTRY_IMAGE2=$(echo "${CI_PROJECT_NAME}" | tr '[:upper:]' '[:lower:]')
+#readonly AUTOMATE_REGISTRY_IMAGE2=$(echo "${CI_PROJECT_NAME}" | tr '[:upper:]' '[:lower:]')
 readonly AUTOMATE_GIT_VERSION=$(echo "${GitVersion_FullSemVer}" | tr '[:upper:]' '[:lower:]')
 
 # Define the image name (ensure this matches the loaded image)
@@ -82,8 +106,11 @@ readonly AUTOMATE_IMAGE_NAME="$AUTOMATE_REGISTRY_IMAGE:$AUTOMATE_GIT_VERSION"
 # Load the Docker image from the tar file
 readonly AUTOMATE_IMAGE_TAR="$ARTIFACTS_DIR_CR_IMAGE-$AUTOMATE_GIT_VERSION.tar"
 
+# Load the Docker image from the tar file
+readonly AUTOMATE_ARTIFACTORY_REPOSITORY="${ROADMAP_JSON[index]}-${ROADMAP_JSON[namespace]}-${ROADMAP_JSON[artifact_id]}"
+
 # Convert Target Destinations repository name to lowercase for Docker compatibility
-readonly AUTOMATE_TARGET_CR="${Sce_Automate_Docker_Hub}${AUTOMATE_REGISTRY_IMAGE2}:${AUTOMATE_GIT_VERSION}"
+readonly AUTOMATE_TARGET_CR="${Sce_Automate_Docker_Hub}${AUTOMATE_ARTIFACTORY_REPOSITORY}:${AUTOMATE_GIT_VERSION}"
 
 # Log the mapped variables (optional for debugging)
 log_info "Automate.Git.Version -----> $AUTOMATE_GIT_VERSION"
